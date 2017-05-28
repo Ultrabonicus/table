@@ -29,6 +29,10 @@ var DataCollection = Backbone.Collection.extend({
 })
 
 var ControlsModel = Backbone.Model.extend({
+	initialize: function(obj, opts){
+		
+	},
+
 	defaults: {
 		year: 'horizontal',
 		department: 'horizontal',
@@ -174,23 +178,25 @@ var TableView = Backbone.View.extend({
 	createVirtualTable: function(leftGroups, topGroups, leftSide, topSide){
 		var virtualTable = []
 		var leftOffset = leftGroups.length
-		var topOffset = topGroups.length + 1
-
-		for (var i = 0; i <= leftSide.span + topOffset; i++) {
+		var topOffset = topGroups.length
+		
+		for (var i = 0; i <= leftSide.span + topOffset+2; i++) {
 			virtualTable[i] = []
-			for (var k = 0; k <= topSide.span + leftOffset; k++) {
+			for (var k = 0; k <= topSide.span + leftOffset+2; k++) {
 				virtualTable[i][k] = "<!--"+ i + "|" + k +" -->"
 			}
 		}
 
-
-
-		virtualTable[0][0] = "<td colspan="+ (leftOffset) +" rowspan="+ (topOffset-1)+">table</td>"
+		virtualTable[0][0] = "<td colspan="+ leftOffset +" rowspan="+ topOffset +"></td>"
 
 		//left side
 		leftGroups.forEach((v, i)=>{
-			virtualTable[leftOffset][i] = "<td"+ (i===leftGroups.length-1 ? " colspan=2 " : "") +">"+v+"</td>"
+			virtualTable[topOffset][i] = "<td>"+v+"</td>"
 		})
+
+		if(leftOffset&&topOffset){
+			virtualTable[topOffset][leftGroups.length+1] = "<td></td>"
+		}
 
 		function leftSideRecH(obj, depth, currentPosition){
 			_(obj).reduce((acc, v, k)=>{
@@ -214,11 +220,11 @@ var TableView = Backbone.View.extend({
 			},{position: currentPosition})
 		}
 
-		leftSideRecH(leftSide, 0, topOffset)
+		leftSideRecH(leftSide, 0, topOffset+1)
 
 		//top side
 		topGroups.forEach((v, i)=>{
-			virtualTable[i][topOffset] = "<td"+ (i===topGroups.length ? " rowspan=1 " : "") +">"+v+"</td>"
+			virtualTable[i][leftOffset] = "<td>"+v+"</td>"
 		})
 
 		function topSideRecH(obj, depth, currentPosition){
@@ -243,14 +249,14 @@ var TableView = Backbone.View.extend({
 			},{position: currentPosition})
 		}
 
-		topSideRecH(topSide, 0, topOffset+1)
+		topSideRecH(topSide, 0, leftOffset+1)
 
 		var dataTable = this.createVirtualTableForData(this.dataCollection, leftSide.span, topSide.span)
 
 		for (var i = 0; i < leftSide.span; i++) {
 			for (var k = 0; k < topSide.span; k++) {
 				var tableCell = "<td>"+ dataTable[i][k] +"</td>"
-				virtualTable[i + topOffset][k + leftOffset] = tableCell
+				virtualTable[i + topOffset+1][k + leftOffset] = tableCell
 			}
 		}
 
